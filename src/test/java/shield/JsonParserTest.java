@@ -14,11 +14,11 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class JsonParserTest {
+class JsonParserTest {
 	ObjectMapper mapper = new ObjectMapper();
 
 	@Test
-	public void parsesAllEventsFromSample() throws IOException {
+	void parsesAllEventsFromSample() throws IOException {
 		assertEquals(7, parseEvents().size());
 	}
 
