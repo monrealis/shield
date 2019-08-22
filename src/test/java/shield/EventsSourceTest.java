@@ -1,11 +1,14 @@
 package shield;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.junit.jupiter.api.Test;
 
@@ -24,6 +27,22 @@ class EventsSourceTest {
 		assertEquals(7, events.size());
 		assertEquals("profile_create", events.get(0).type);
 		assertEquals("request", events.get(1).type);
+	}
+
+	@Test
+	void closesInputStreamAfterParsing() {
+		AtomicBoolean closed = new AtomicBoolean();
+		FilterInputStream input = new FilterInputStream(loadSample()) {
+			@Override
+			public void close() throws IOException {
+				super.close();
+				closed.set(true);
+			}
+		};
+
+		new EventsSource(input).events();
+
+		assertTrue(closed.get());
 	}
 
 	private InputStream loadSample() {
