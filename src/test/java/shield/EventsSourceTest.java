@@ -14,11 +14,12 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class EventsSourceTest {
+	private WhiteboxInputStream input = loadSampleWhitebox();
+	private EventsSource eventsSource = new EventsSource(input);
+
 	@Test
 	void parsesAllEventsFromSample() {
-		InputStream input = loadSample();
-
-		List<Event> events = new EventsSource(input).events();
+		List<Event> events = eventsSource.events();
 
 		assertEquals(7, events.size());
 		assertEquals("profile_create", events.get(0).type);
@@ -27,16 +28,14 @@ class EventsSourceTest {
 
 	@Test
 	void closesInputStreamAfterParsing() {
-		WhiteboxFilterStream input = loadSampleWhitebox();
-
-		new EventsSource(input).events();
+		eventsSource.events();
 
 		assertTrue(input.isClosed());
 	}
 
 	@Test
 	void mapsProfileFields() {
-		Event event = new EventsSource(loadSample()).iterator().next();
+		Event event = eventsSource.iterator().next();
 
 		assertEquals("profile_create", event.type);
 		assertEquals("iPhone", event.modelName);
@@ -48,7 +47,7 @@ class EventsSourceTest {
 
 	@Test
 	public void mapsRequestFields() {
-		Event event = new EventsSource(loadSample()).events().get(1);
+		Event event = eventsSource.events().get(1);
 
 		assertEquals("request", event.type);
 		assertEquals("66d03a6947c048009f0b34260f35f3bd", event.requestId);
@@ -60,26 +59,23 @@ class EventsSourceTest {
 
 	@Test
 	void readsElementsOneByOne() {
-		WhiteboxFilterStream input = loadSampleWhitebox();
-
-		new EventsSource(input).iterator().next();
+		eventsSource.iterator().next();
 
 		assertFalse(input.isClosed());
-
 	}
 
-	private WhiteboxFilterStream loadSampleWhitebox() {
-		return new WhiteboxFilterStream(loadSample());
+	private WhiteboxInputStream loadSampleWhitebox() {
+		return new WhiteboxInputStream(loadSample());
 	}
 
 	private InputStream loadSample() {
 		return getClass().getResourceAsStream("/sample.json");
 	}
 
-	private final class WhiteboxFilterStream extends FilterInputStream {
+	private final class WhiteboxInputStream extends FilterInputStream {
 		private boolean closed;
 
-		private WhiteboxFilterStream(InputStream in) {
+		private WhiteboxInputStream(InputStream in) {
 			super(in);
 		}
 
