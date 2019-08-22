@@ -17,36 +17,13 @@ import com.fasterxml.jackson.core.TreeNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 class JsonParserTest {
-	ObjectMapper mapper = new ObjectMapper();
-
 	@Test
 	void parsesAllEventsFromSample() {
-		List<Event> events = parseEvents();
+		List<Event> events = new EventsSource(loadSample()).events();
 
 		assertEquals(7, events.size());
 		assertEquals("profile_create", events.get(0).type);
 		assertEquals("request", events.get(1).type);
-	}
-
-	// https://stackoverflow.com/questions/24835431/use-jackson-to-stream-parse-an-array-of-json-objects
-	private List<Event> parseEvents() {
-		try (JsonParser parser = createParser()) {
-			List<Event> events = new ArrayList<>();
-			while (parser.nextToken() == JsonToken.START_OBJECT)
-				events.add(toEvent(parser));
-			return events;
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	private Event toEvent(JsonParser parser) throws IOException {
-		TreeNode node = mapper.readTree(parser);
-		return mapper.convertValue(node, Event.class);
-	}
-
-	private JsonParser createParser() throws IOException, JsonParseException {
-		return mapper.getFactory().createParser(loadSample());
 	}
 
 	private InputStream loadSample() {
@@ -56,5 +33,35 @@ class JsonParserTest {
 	@JsonIgnoreProperties(ignoreUnknown = true)
 	private static class Event {
 		public String type;
+	}
+
+	private static class EventsSource {
+		private final ObjectMapper mapper = new ObjectMapper();
+		private final InputStream inputStream;
+
+		public EventsSource(InputStream inputStream) {
+			this.inputStream = inputStream;
+		}
+
+		// https://stackoverflow.com/questions/24835431/use-jackson-to-stream-parse-an-array-of-json-objects
+		public List<Event> events() {
+			try (JsonParser parser = createParser()) {
+				List<Event> events = new ArrayList<>();
+				while (parser.nextToken() == JsonToken.START_OBJECT)
+					events.add(toEvent(parser));
+				return events;
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		}
+
+		private Event toEvent(JsonParser parser) throws IOException {
+			TreeNode node = mapper.readTree(parser);
+			return mapper.convertValue(node, Event.class);
+		}
+
+		private JsonParser createParser() throws IOException, JsonParseException {
+			return mapper.getFactory().createParser(inputStream);
+		}
 	}
 }
