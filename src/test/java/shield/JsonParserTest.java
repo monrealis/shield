@@ -33,16 +33,16 @@ class JsonParserTest {
 		try (JsonParser parser = createParser()) {
 			List<Event> events = new ArrayList<>();
 			while (parser.nextToken() == JsonToken.START_OBJECT)
-				toEvent(events, parser);
+				events.add(toEvent(parser));
 			return events;
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
 	}
 
-	private void toEvent(List<Event> events, JsonParser parser) throws IOException {
+	private Event toEvent(JsonParser parser) throws IOException {
 		TreeNode node = mapper.readTree(parser);
-		events.add(mapper.convertValue(node, Event.class));
+		return mapper.convertValue(node, Event.class);
 	}
 
 	private JsonParser createParser() throws IOException, JsonParseException {
