@@ -16,7 +16,7 @@ import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.core.TreeNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-class JsonParserTest {
+class EventsSourceTest {
 	@Test
 	void parsesAllEventsFromSample() {
 		List<Event> events = new EventsSource(loadSample()).events();
