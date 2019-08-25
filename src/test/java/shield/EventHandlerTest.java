@@ -8,13 +8,23 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
+import shield.EventHandler.Action;
+import shield.EventHandler.Decision;
+
 public class EventHandlerTest {
 	private StringWriter output = new StringWriter();
-	private EventHandler handler = new EventHandler(new PrintWriter(output));
+	private EventHandler handler = new EventHandler(new PrintWriter(output)) {
+		protected void handleDecision(Decision decision) {
+			super.handleDecision(decision);
+			decisions.add(decision);
+		};
+	};
+	private List<Decision> decisions = new ArrayList<>();
 
 	@Test
 	void allowsOnlyWhitelistedUrls() {
@@ -56,6 +66,18 @@ public class EventHandlerTest {
 		handler.handle(createRequest("r1", "M1", "facebook.com"));
 
 		assertEquals("{'request_id':'r1','action':'allow'}\n".replace('\'', '"'), output.toString());
+	}
+
+	@Test
+	void allowsUrlFromWhitelist() {
+		Event event = allowOnlyFacebook("profile_create");
+		handler.handle(event);
+
+		handler.handle(createRequest("r1", "M1", "facebook.com"));
+
+		assertEquals(1, decisions.size());
+		assertEquals(Action.ALLOW, decisions.get(0).action);
+		assertEquals("r1", decisions.get(0).requestId);
 	}
 
 	private Event createRequest(String id, String device, String url) {

@@ -25,10 +25,11 @@ public class EventHandler {
 	}
 
 	private void handleRequest(Event event) {
-		Decision d = new Decision();
-		d.action = Action.ALLOW;
-		d.requestId = event.requestId;
-		String s = marshall(d);
+		handleDecision(Decision.allow(event.requestId));
+	}
+
+	protected void handleDecision(Decision decision) {
+		String s = marshall(decision);
 		output.println(s);
 	}
 
@@ -45,14 +46,21 @@ public class EventHandler {
 		return currentPolicy.get(modelName).whitelist.contains(url);
 	}
 
-	private static class Decision {
+	static class Decision {
 		@JsonProperty("request_id")
 		public String requestId;
 		@JsonProperty("action")
 		public Action action;
+
+		public static Decision allow(String requestId) {
+			Decision d = new Decision();
+			d.requestId = requestId;
+			d.action = Action.ALLOW;
+			return d;
+		}
 	}
-	
-	private static enum Action {
+
+	static enum Action {
 		@JsonProperty("allow")
 		ALLOW
 	}
