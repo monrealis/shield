@@ -26,7 +26,7 @@ public class EventHandler {
 
 	private void handleRequest(Event event) {
 		Decision d = new Decision();
-		d.action = "allow";
+		d.action = Action.ALLOW;
 		d.requestId = event.requestId;
 		String s = marshall(d);
 		output.println(s);
@@ -49,6 +49,11 @@ public class EventHandler {
 		@JsonProperty("request_id")
 		public String requestId;
 		@JsonProperty("action")
-		public String action;
+		public Action action;
+	}
+	
+	private static enum Action {
+		@JsonProperty("allow")
+		ALLOW
 	}
 }
