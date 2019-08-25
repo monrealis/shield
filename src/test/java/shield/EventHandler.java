@@ -7,7 +7,6 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 
 public class EventHandler {
 	private static ObjectMapper mapper = new ObjectMapper();
@@ -16,7 +15,6 @@ public class EventHandler {
 
 	public EventHandler(PrintWriter output) {
 		this.output = output;
-		mapper.enable(SerializationFeature.INDENT_OUTPUT);
 	}
 
 	public void handle(Event event) {

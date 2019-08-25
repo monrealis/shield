@@ -9,7 +9,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 public class EventHandlerTest {
@@ -31,7 +30,6 @@ public class EventHandlerTest {
 	}
 
 	@Test
-	@Disabled
 	void logsRequestToOutput() {
 		Event event = new Event();
 		event.type = "profile_create";
@@ -43,7 +41,7 @@ public class EventHandlerTest {
 
 		handler.handle(createRequest("r1", "M1", "facebook.com"));
 
-		assertEquals("{'request_id': 'r1', 'action': 'allow'}\n".replace('\'', '"'), output.toString());
+		assertEquals("{'request_id':'r1','action':'allow'}\n".replace('\'', '"'), output.toString());
 	}
 
 	private Event createRequest(String id, String device, String url) {
