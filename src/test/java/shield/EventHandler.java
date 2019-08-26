@@ -18,10 +18,18 @@ public class EventHandler {
 	}
 
 	public void handle(Event event) {
-		if (event.type.equals("profile_create") || event.type.equals("profile_update"))
-			currentPolicy.put(event.modelName, event);
-		else
+		if ("profile_create".equals(event.type))
+			handleProfileEvent(event);
+		else if ("profile_update".equals(event.type))
+			handleProfileEvent(event);
+		else if ("request".equals(event.type))
 			handleRequest(event);
+		else
+			throw new IllegalArgumentException("Uknown event type " + event.type);
+	}
+
+	private void handleProfileEvent(Event event) {
+		currentPolicy.put(event.modelName, event);
 	}
 
 	private void handleRequest(Event event) {
