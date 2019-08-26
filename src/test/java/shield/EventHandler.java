@@ -1,7 +1,9 @@
 package shield;
 
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -11,6 +13,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class EventHandler {
 	private static ObjectMapper mapper = new ObjectMapper();
 	private final Map<String, Event> currentPolicy = new HashMap<>();
+	private final List<String> unsupportedTypeErrors = new ArrayList<>();
 	private final PrintWriter output;
 
 	public EventHandler(PrintWriter output) {
@@ -25,7 +28,7 @@ public class EventHandler {
 		else if ("request".equals(event.type))
 			handleRequest(event);
 		else
-			throw new IllegalArgumentException("Uknown event type " + event.type);
+			unsupportedTypeErrors.add(event.type);
 	}
 
 	private void handleProfileEvent(Event event) {
@@ -52,6 +55,10 @@ public class EventHandler {
 
 	public boolean inspectRequest(String modelName, String url) {
 		return currentPolicy.get(modelName).whitelist.contains(url);
+	}
+
+	public int errorCount() {
+		return unsupportedTypeErrors.size();
 	}
 
 	static class Decision {

@@ -4,7 +4,6 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.PrintWriter;
@@ -46,8 +45,19 @@ public class EventHandlerTest {
 	}
 
 	@Test
-	void throwsExceptionOnUnknownEvent() {
-		assertThrows(RuntimeException.class, () -> handler.handle(new Event()));
+	void ignoresEventTypeNull() {
+		handler.handle(new Event());
+
+		assertEquals(1, handler.errorCount());
+	}
+
+	@Test
+	void ignoreUnknownEvent() {
+		Event event = new Event();
+		event.type = "unknown";
+		handler.handle(event);
+
+		assertEquals(1, handler.errorCount());
 	}
 
 	private Event allowOnlyFacebook(String eventType) {
@@ -71,6 +81,7 @@ public class EventHandlerTest {
 
 		handler.handle(createRequest("r1", "M1", "facebook.com"));
 
+		// We don't care about spacing since there's no easy way to configure Jackson
 		assertEquals("{'request_id':'r1','action':'allow'}\n".replace('\'', '"'), output.toString());
 	}
 
@@ -84,6 +95,7 @@ public class EventHandlerTest {
 		assertEquals(1, decisions.size());
 		assertEquals(Action.ALLOW, decisions.get(0).action);
 		assertEquals("r1", decisions.get(0).requestId);
+		assertEquals(0, handler.errorCount());
 	}
 
 	private Event createRequest(String id, String device, String url) {
