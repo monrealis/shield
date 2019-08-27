@@ -4,6 +4,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.PrintWriter;
@@ -42,6 +43,11 @@ public class EventHandlerTest {
 
 		assertFalse(handler.inspectRequest("M1", "facebook.com"));
 		assertFalse(handler.inspectRequest("M1", "other.com"));
+	}
+
+	@Test
+	void profileUpdateWhitoutExistingProfileIsNotAllowed() {
+		assertThrows(RuntimeException.class, () -> handler.handle(updateWhiteList(emptyList())));
 	}
 
 	@Test

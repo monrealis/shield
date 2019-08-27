@@ -1,6 +1,7 @@
 package shield;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -14,7 +15,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class EventHandler {
 	private static ObjectMapper mapper = new ObjectMapper();
-	private final Map<String, Event> currentPolicy = new HashMap<>();
+	private final Map<String, Event> currentPolicies = new HashMap<>();
 	private final List<String> unsupportedTypeErrors = new ArrayList<>();
 	private final PrintWriter output;
 
@@ -36,13 +37,16 @@ public class EventHandler {
 	private void handleProfileCreate(Event event) {
 		checkArgument(event.defaultPolicy != null, "default policy cannot be given in a profile update event");
 		checkProfileEvent(event);
-		currentPolicy.put(event.modelName, event);
+		currentPolicies.put(event.modelName, event);
 	}
 
 	private void handleProfileUpdate(Event event) {
 		checkArgument(event.defaultPolicy == null, "default policy cannot be given in a profile update event");
 		checkProfileEvent(event);
-		currentPolicy.put(event.modelName, event);
+		Event current = currentPolicies.get(event.modelName);
+		checkState(current != null, "cannot update not existing policy");
+		current.blacklist = new ArrayList<>(event.blacklist);
+		current.whitelist = new ArrayList<>(event.whitelist);
 	}
 
 	private void checkProfileEvent(Event event) {
@@ -70,7 +74,7 @@ public class EventHandler {
 	}
 
 	public boolean inspectRequest(String modelName, String url) {
-		return currentPolicy.get(modelName).whitelist.contains(url);
+		return currentPolicies.get(modelName).whitelist.contains(url);
 	}
 
 	public int errorCount() {
