@@ -28,7 +28,7 @@ public class EventHandlerTest {
 
 	@Test
 	void allowsOnlyWhitelistedUrls() {
-		Event event = allowOnlyFacebook("profile_create");
+		Event event = allowOnlyFacebook();
 		handler.handle(event);
 
 		assertTrue(handler.inspectRequest("M1", "facebook.com"));
@@ -37,8 +37,8 @@ public class EventHandlerTest {
 
 	@Test
 	void handlesProfileUpdates() {
-		handler.handle(allowOnlyFacebook("profile_create"));
-		handler.handle(allowOnly("profile_update", emptyList()));
+		handler.handle(allowOnlyFacebook());
+		handler.handle(updateWhiteList(emptyList()));
 
 		assertFalse(handler.inspectRequest("M1", "facebook.com"));
 		assertFalse(handler.inspectRequest("M1", "other.com"));
@@ -60,13 +60,13 @@ public class EventHandlerTest {
 		assertEquals(1, handler.errorCount());
 	}
 
-	private Event allowOnlyFacebook(String eventType) {
-		return allowOnly(eventType, asList("facebook.com"));
+	private Event allowOnlyFacebook() {
+		return allowOnly(asList("facebook.com"));
 	}
 
-	private Event allowOnly(String eventType, List<String> whitelist) {
+	private Event allowOnly(List<String> whitelist) {
 		Event event = new Event();
-		event.type = eventType;
+		event.type = "profile_create";
 		event.modelName = "M1";
 		event.defaultPolicy = "block";
 		event.whitelist = whitelist;
@@ -74,9 +74,18 @@ public class EventHandlerTest {
 		return event;
 	}
 
+	private Event updateWhiteList(List<String> whitelist) {
+		Event event = new Event();
+		event.type = "profile_update";
+		event.modelName = "M1";
+		event.whitelist = whitelist;
+		event.blacklist = emptyList();
+		return event;
+	}
+
 	@Test
 	void logsRequestToOutput() {
-		Event event = allowOnlyFacebook("profile_create");
+		Event event = allowOnlyFacebook();
 		handler.handle(event);
 
 		handler.handle(createRequest("r1", "M1", "facebook.com"));
@@ -87,7 +96,7 @@ public class EventHandlerTest {
 
 	@Test
 	void allowsUrlFromWhitelist() {
-		Event event = allowOnlyFacebook("profile_create");
+		Event event = allowOnlyFacebook();
 		handler.handle(event);
 
 		handler.handle(createRequest("r1", "M1", "facebook.com"));

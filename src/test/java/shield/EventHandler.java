@@ -1,5 +1,7 @@
 package shield;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -22,17 +24,31 @@ public class EventHandler {
 
 	public void handle(Event event) {
 		if ("profile_create".equals(event.type))
-			handleProfileEvent(event);
+			handleProfileCreate(event);
 		else if ("profile_update".equals(event.type))
-			handleProfileEvent(event);
+			handleProfileUpdate(event);
 		else if ("request".equals(event.type))
 			handleRequest(event);
 		else
 			unsupportedTypeErrors.add(event.type);
 	}
 
-	private void handleProfileEvent(Event event) {
+	private void handleProfileCreate(Event event) {
+		checkArgument(event.defaultPolicy != null, "default policy cannot be given in a profile update event");
+		checkProfileEvent(event);
 		currentPolicy.put(event.modelName, event);
+	}
+
+	private void handleProfileUpdate(Event event) {
+		checkArgument(event.defaultPolicy == null, "default policy cannot be given in a profile update event");
+		checkProfileEvent(event);
+		currentPolicy.put(event.modelName, event);
+	}
+
+	private void checkProfileEvent(Event event) {
+		checkArgument(event.whitelist != null, "whitelist is mandatory");
+		checkArgument(event.blacklist != null, "blacklist is mandatory");
+		checkArgument(event.modelName != null, "modelName is mandatory");
 	}
 
 	private void handleRequest(Event event) {
