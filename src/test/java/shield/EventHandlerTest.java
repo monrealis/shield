@@ -2,6 +2,7 @@ package shield;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.joining;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -20,8 +21,8 @@ import shield.EventHandler.Decision;
 public class EventHandlerTest {
 	private StringWriter output = new StringWriter();
 	private EventHandler handler = new EventHandler(new PrintWriter(output)) {
-		protected void handleDecision(Decision decision) {
-			super.handleDecision(decision);
+		protected void handleDecision(Decision decision, String deviceId) {
+			super.handleDecision(decision, deviceId);
 			decisions.add(decision);
 		};
 	};
@@ -94,7 +95,7 @@ public class EventHandlerTest {
 		Event event = allowOnlyFacebook();
 		handler.handle(event);
 
-		handler.handle(createRequest("r1", "M1", "facebook.com"));
+		handler.handle(createRequest("r1", "d1", "M1", "facebook.com"));
 
 		// We don't care about spacing since there's no easy way to configure Jackson
 		assertEquals("{'request_id':'r1','action':'allow'}\n".replace('\'', '"'), output.toString());
@@ -105,7 +106,7 @@ public class EventHandlerTest {
 		Event event = allowOnlyFacebook();
 		handler.handle(event);
 
-		handler.handle(createRequest("r1", "M1", "facebook.com"));
+		handler.handle(createRequest("r1", "d1", "M1", "facebook.com"));
 
 		assertEquals(1, decisions.size());
 		assertEquals(Action.ALLOW, decisions.get(0).action);
@@ -118,17 +119,44 @@ public class EventHandlerTest {
 		Event event = allowOnlyFacebook();
 		handler.handle(event);
 
-		handler.handle(createRequest("r1", "M1", "other.com"));
+		handler.handle(createRequest("r1", "d1", "M1", "other.com"));
 
-		assertEquals(Action.QUARANTINE, decisions.get(0).action);
+		assertEquals("Q", actions());
 	}
 
-	private Event createRequest(String id, String modelName, String url) {
+	@Test
+	void cannotMoveOutOfQuarantine() {
+		Event event = allowOnlyFacebook();
+		handler.handle(event);
+
+		handler.handle(createRequest("r1", "d1", "M1", "other.com"));
+		handler.handle(createRequest("r1", "d1", "M1", "facebook.com"));
+
+		assertEquals("QQ", actions());
+	}
+
+	@Test
+	void quarantineIsForDeviceOnlyNotForModel() {
+		Event event = allowOnlyFacebook();
+		handler.handle(event);
+
+		handler.handle(createRequest("r1", "d1", "M1", "other.com"));
+		handler.handle(createRequest("r2", "d2", "M1", "facebook.com"));
+
+		assertEquals("QA", actions());
+	}
+
+	private Event createRequest(String requestId, String deviceId, String modelName, String url) {
 		Event e = new Event();
 		e.type = "request";
-		e.requestId = id;
+		e.deviceId = deviceId;
+		e.requestId = requestId;
 		e.modelName = modelName;
 		e.url = url;
 		return e;
+	}
+
+	private String actions() {
+		return decisions.stream().map(d -> d.action.name().substring(0, 1)).collect(joining());
 	}
 }

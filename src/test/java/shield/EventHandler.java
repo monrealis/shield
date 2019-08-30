@@ -6,8 +6,10 @@ import static com.google.common.base.Preconditions.checkState;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -16,6 +18,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class EventHandler {
 	private static ObjectMapper mapper = new ObjectMapper();
 	private final Map<String, Event> currentPolicies = new HashMap<>();
+	private final Set<String> quarantinedDevices = new HashSet<>();
 	private final List<String> unsupportedTypeErrors = new ArrayList<>();
 	private final PrintWriter output;
 
@@ -56,22 +59,25 @@ public class EventHandler {
 	}
 
 	private void handleRequest(Event event) {
-		handleDecision(decide(event));
+		handleDecision(decide(event), event.deviceId);
 	}
 
 	private Decision decide(Event event) {
 		Event policy = currentPolicy(event);
+		if (quarantinedDevices.contains(event.deviceId))
+			return Decision.quarantine(event.requestId);
 		if (policy.whitelist.contains(event.url))
 			return Decision.allow(event.requestId);
-		else
-			return Decision.quarantine(event.requestId);
+		return Decision.quarantine(event.requestId);
 	}
 
 	private Event currentPolicy(Event event) {
 		return currentPolicies.get(event.modelName);
 	}
 
-	protected void handleDecision(Decision decision) {
+	protected void handleDecision(Decision decision, String deviceId) {
+		if (decision.action == Action.QUARANTINE)
+			quarantinedDevices.add(deviceId);
 		String s = marshall(decision);
 		output.println(s);
 	}
@@ -117,8 +123,7 @@ public class EventHandler {
 
 	static enum Action {
 		@JsonProperty("allow")
-		ALLOW,
-		//
+		ALLOW, //
 		@JsonProperty("quarantine")
 		QUARANTINE
 	}
