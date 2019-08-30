@@ -21,9 +21,13 @@ import shield.EventHandler.Decision;
 public class EventHandlerTest {
 	private StringWriter output = new StringWriter();
 	private EventHandler handler = new EventHandler(new PrintWriter(output)) {
-		protected void handleDecision(Decision decision, String deviceId) {
-			super.handleDecision(decision, deviceId);
+		protected void handleDecision(Decision decision) {
+			super.handleDecision(decision);
 			decisions.add(decision);
+		};
+
+		protected void quarantine(String deviceId) {
+			super.quarantine(deviceId);
 		};
 	};
 	private List<Decision> decisions = new ArrayList<>();

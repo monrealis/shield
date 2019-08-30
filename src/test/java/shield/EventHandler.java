@@ -75,9 +75,17 @@ public class EventHandler {
 		return currentPolicies.get(event.modelName);
 	}
 
-	protected void handleDecision(Decision decision, String deviceId) {
+	private void handleDecision(Decision decision, String deviceId) {
 		if (decision.action == Action.BLOCK)
-			quarantinedDevices.add(deviceId);
+			quarantine(deviceId);
+		handleDecision(decision);
+	}
+
+	protected void quarantine(String deviceId) {
+		quarantinedDevices.add(deviceId);
+	}
+
+	protected void handleDecision(Decision decision) {
 		String s = marshall(decision);
 		output.println(s);
 	}
