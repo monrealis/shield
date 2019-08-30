@@ -121,29 +121,29 @@ public class EventHandlerTest {
 
 		handler.handle(createRequest("r1", "d1", "M1", "other.com"));
 
-		assertEquals("Q", actions());
+		assertEquals("B", actions());
 	}
 
 	@Test
-	void cannotMoveOutOfQuarantine() {
+	void ifDeviceIsInQuarantine_blocksWhitelisted() {
 		Event event = allowOnlyFacebook();
 		handler.handle(event);
 
 		handler.handle(createRequest("r1", "d1", "M1", "other.com"));
 		handler.handle(createRequest("r1", "d1", "M1", "facebook.com"));
 
-		assertEquals("QQ", actions());
+		assertEquals("BB", actions());
 	}
 
 	@Test
-	void quarantineIsForDeviceOnlyNotForModel() {
+	void ifDeviceIsInQuarantine_allowsWhitelisted() {
 		Event event = allowOnlyFacebook();
 		handler.handle(event);
 
 		handler.handle(createRequest("r1", "d1", "M1", "other.com"));
 		handler.handle(createRequest("r2", "d2", "M1", "facebook.com"));
 
-		assertEquals("QA", actions());
+		assertEquals("BA", actions());
 	}
 
 	private Event createRequest(String requestId, String deviceId, String modelName, String url) {

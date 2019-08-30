@@ -76,7 +76,7 @@ public class EventHandler {
 	}
 
 	protected void handleDecision(Decision decision, String deviceId) {
-		if (decision.action == Action.QUARANTINE)
+		if (decision.action == Action.BLOCK)
 			quarantinedDevices.add(deviceId);
 		String s = marshall(decision);
 		output.println(s);
@@ -110,7 +110,7 @@ public class EventHandler {
 		}
 
 		public static Decision quarantine(String requestId) {
-			return action(requestId, Action.QUARANTINE);
+			return action(requestId, Action.BLOCK);
 		}
 
 		private static Decision action(String requestId, Action action) {
@@ -124,7 +124,7 @@ public class EventHandler {
 	static enum Action {
 		@JsonProperty("allow")
 		ALLOW, //
-		@JsonProperty("quarantine")
-		QUARANTINE
+		@JsonProperty("block")
+		BLOCK
 	}
 }
