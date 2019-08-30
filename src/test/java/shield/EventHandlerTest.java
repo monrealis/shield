@@ -113,11 +113,21 @@ public class EventHandlerTest {
 		assertEquals(0, handler.errorCount());
 	}
 
-	private Event createRequest(String id, String device, String url) {
+	@Test
+	void ifUrlIsNotFromWhitelistQuarantineActionIsTaken() {
+		Event event = allowOnlyFacebook();
+		handler.handle(event);
+
+		handler.handle(createRequest("r1", "M1", "other.com"));
+
+		assertEquals(Action.QUARANTINE, decisions.get(0).action);
+	}
+
+	private Event createRequest(String id, String modelName, String url) {
 		Event e = new Event();
 		e.type = "request";
 		e.requestId = id;
-		e.deviceId = device;
+		e.modelName = modelName;
 		e.url = url;
 		return e;
 	}

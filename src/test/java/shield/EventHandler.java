@@ -43,7 +43,7 @@ public class EventHandler {
 	private void handleProfileUpdate(Event event) {
 		checkArgument(event.defaultPolicy == null, "default policy cannot be given in a profile update event");
 		checkProfileEvent(event);
-		Event current = currentPolicies.get(event.modelName);
+		Event current = currentPolicy(event);
 		checkState(current != null, "cannot update not existing policy");
 		current.blacklist = new ArrayList<>(event.blacklist);
 		current.whitelist = new ArrayList<>(event.whitelist);
@@ -56,7 +56,19 @@ public class EventHandler {
 	}
 
 	private void handleRequest(Event event) {
-		handleDecision(Decision.allow(event.requestId));
+		handleDecision(decide(event));
+	}
+
+	private Decision decide(Event event) {
+		Event policy = currentPolicy(event);
+		if (policy.whitelist.contains(event.url))
+			return Decision.allow(event.requestId);
+		else
+			return Decision.quarantine(event.requestId);
+	}
+
+	private Event currentPolicy(Event event) {
+		return currentPolicies.get(event.modelName);
 	}
 
 	protected void handleDecision(Decision decision) {
@@ -88,15 +100,26 @@ public class EventHandler {
 		public Action action;
 
 		public static Decision allow(String requestId) {
+			return action(requestId, Action.ALLOW);
+		}
+
+		public static Decision quarantine(String requestId) {
+			return action(requestId, Action.QUARANTINE);
+		}
+
+		private static Decision action(String requestId, Action action) {
 			Decision d = new Decision();
 			d.requestId = requestId;
-			d.action = Action.ALLOW;
+			d.action = action;
 			return d;
 		}
 	}
 
 	static enum Action {
 		@JsonProperty("allow")
-		ALLOW
+		ALLOW,
+		//
+		@JsonProperty("quarantine")
+		QUARANTINE
 	}
 }
